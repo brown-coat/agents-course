@@ -38,28 +38,22 @@ services:
       - pg_data:/var/lib/postgresql/data
       - ./initdb.d:/docker-entrypoint-initdb.d
 
-# psql postgres://user:password@ip_add_or_domain:port/db_name
+  phoenix:
+    container_name: phoenix
+    hostname: phoenix
+    image: arizephoenix/phoenix:version-8.26.3
+    pull_policy: missing
+    networks:
+      - phoenix_net
+    depends_on:
+      phoenixdb:
+        condition: service_healthy
+    ports:
+      - 6006:6006  # PHOENIX_PORT
+      - 4317:4317  # PHOENIX_GRPC_PORT
+      # - 9090:9090  # [Optional] PROMETHEUS PORT IF ENABLED
+    environment:
+      - PHOENIX_SQL_DATABASE_URL=postgresql://${PHOENIXDB_USER:-phoenix}:${PHOENIXDB_PASSWORD:-oteldude}@${PG_HOST:-phoenixdb}:${PG_PORT:-5432}/${PHOENIXDB_DATABASE:-phoenixdb}
+    cap_drop:
+      - ALL
 
-# passfile host:port:db_name:user_name:password
-
-#  psql postgresql://$PG_USER:$PG_PASSWORD@$PG_HOST:$PG_PORT/$PG_DATBASE -c "select count(*) from INFORMATION_SCHEMA.TABLES;" -c "select count(*) from INFORMATION_SCHEMA.COLUMNS;"
-
-
-  # phoenix:
-  #   container_name: phoenix
-  #   hostname: phoenix
-  #   image: arizephoenix/phoenix:version-8.26.3 
-  #   pull_policy: missing
-  #   networks:
-  #     - phoenix_net
-  #   depends_on:  
-  #     phoenixdb:
-  #       condition: service_healthy        
-  #   ports:
-  #     - 6006:6006  # PHOENIX_PORT
-  #     - 4317:4317  # PHOENIX_GRPC_PORT
-  #     # - 9090:9090  # [Optional] PROMETHEUS PORT IF ENABLED
-  #   environment:    
-  #     - PHOENIX_SQL_DATABASE_URL=postgresql://${PHOENIXDB_USER:-phoenix}:${PHOENIXDB_PASSWORD:-phoenixdude}@${PG_HOST:-phoenixdb}:${PG_PORT:-5432}/${PHOENIXDB_DATABASE:-phoenixdb}
-  #   cap_drop:
-  #     - ALL  
