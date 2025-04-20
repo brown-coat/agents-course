@@ -53,12 +53,22 @@ services:
       - PHOENIXDB_USER=${PHOENIXDB_USER:-phoenix}
       - PHOENIXDB_PASSWORD=${PHOENIXDB_PASSWORD:-phoenixdude}
     cap_drop:
-      - ALL  
+      - ALL
     command: |-
-      export PGPASSFILE="phoenixdb:5432:postgres:postgres:pgdude" && \
-      psql -c "CREATE USER phoenix WITH PASSWORD 'phoenixdude' ; " && \
-      psql -c "CREATE DATABASE phoenixdb OWNER phoenix; "
+      #!/bin/sh
+      export PG_HOST=phoenix
+      export PG_DATABASE=postgres
+      export PG_USER=postgres
+      export PG_PASSWORD=pgdude
+      psql -c "CREATE USER phoenix WITH PASSWORD 'phoenixdude' ;"
+      psql -c " CREATE DATABASE phoenixdb OWNER phoenix; "      
     
+
+# psql postgres://user:password@ip_add_or_domain:port/db_name
+
+# passfile host:port:db_name:user_name:password
+
+#  psql postgresql://$PG_USER:$PG_PASSWORD@$PG_HOST:$PG_PORT/$PG_DATBASE -c "select count(*) from INFORMATION_SCHEMA.TABLES;" -c "select count(*) from INFORMATION_SCHEMA.COLUMNS;"
 
 
   # phoenix:
