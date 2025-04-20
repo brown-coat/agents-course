@@ -22,9 +22,15 @@ services:
       timeout: 5s
       retries: 5  
     cap_drop:
-      - ALL  
+      - ALL
+    cap_add:
+      - FOWNER
+      - CHOWN
+      - SETGID
+      - SETUID
+      - DAC_READ_SEARCH
     ports:
-      - 5432
+      - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
   initdbphoenix:
@@ -47,30 +53,29 @@ services:
       - PHOENIXDB_USER=${PHOENIXDB_USER:-phoenix}
       - PHOENIXDB_PASSWORD=${PHOENIXDB_PASSWORD:-phoenixdude}
     cap_drop:
-      - ALL
-    command: [
-      "CMD-SHELL",
-      "psql",
-      "-c",
-      "CREATE USER ${PHOENIXDB_USER:-phoenix} PASSWORD '${PHOENIXDB_PASSWORD:-phoenixdude}' ; ",
-      "-c",
-      "CREATE DATABASE ${PHOENIXDB_DATABASE:-phoenixdb} OWNER ${PHOENIXDB_USER:-phoenix} ;"
-      ]
-  phoenix:
-    container_name: phoenix
-    hostname: phoenix
-    image: arizephoenix/phoenix:version-8.26.3 
-    pull_policy: missing
-    networks:
-      - phoenix_net
-    depends_on:  
-      phoenixdb:
-        condition: service_healthy        
-    ports:
-      - 6006:6006  # PHOENIX_PORT
-      - 4317:4317  # PHOENIX_GRPC_PORT
-      # - 9090:9090  # [Optional] PROMETHEUS PORT IF ENABLED
-    environment:    
-      - PHOENIX_SQL_DATABASE_URL=postgresql://${PHOENIXDB_USER:-phoenix}:${PHOENIXDB_PASSWORD:-phoenixdude}@${PG_HOST:-phoenixdb}:${PG_PORT:-5432}/${PHOENIXDB_DATABASE:-phoenixdb}
-    cap_drop:
       - ALL  
+    command: |-
+      export PGPASSFILE="phoenixdb:5432:postgres:postgres:pgdude" && \
+      psql -c "CREATE USER phoenix WITH PASSWORD 'phoenixdude' ; " && \
+      psql -c "CREATE DATABASE phoenixdb OWNER phoenix; "
+    
+
+
+  # phoenix:
+  #   container_name: phoenix
+  #   hostname: phoenix
+  #   image: arizephoenix/phoenix:version-8.26.3 
+  #   pull_policy: missing
+  #   networks:
+  #     - phoenix_net
+  #   depends_on:  
+  #     phoenixdb:
+  #       condition: service_healthy        
+  #   ports:
+  #     - 6006:6006  # PHOENIX_PORT
+  #     - 4317:4317  # PHOENIX_GRPC_PORT
+  #     # - 9090:9090  # [Optional] PROMETHEUS PORT IF ENABLED
+  #   environment:    
+  #     - PHOENIX_SQL_DATABASE_URL=postgresql://${PHOENIXDB_USER:-phoenix}:${PHOENIXDB_PASSWORD:-phoenixdude}@${PG_HOST:-phoenixdb}:${PG_PORT:-5432}/${PHOENIXDB_DATABASE:-phoenixdb}
+  #   cap_drop:
+  #     - ALL  
