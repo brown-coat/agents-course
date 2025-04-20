@@ -16,6 +16,9 @@ services:
       - POSTGRES_USER=${PG_USER:-postgres}
       - POSTGRES_PASSWORD=${PG_PASSWORD:-pgdude}
       - POSTGRES_DB=${PG_DATABASE:-postgres}
+      - PHOENIXDB_DATABASE=${PHOENIXDB_DATABASE:-phoenixdb}
+      - PHOENIXDB_USER=${PHOENIXDB_USER:-phoenix}
+      - PHOENIXDB_PASSWORD=${PHOENIXDB_PASSWORD:-oteldude}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]
       interval: 10s
@@ -33,36 +36,7 @@ services:
       - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
-  initdbphoenix:
-    container_name: initdbphoenix
-    hostname: initdbphoenix
-    image: "alpine/psql:15.5"
-    pull_policy: missing
-    networks:
-      - phoenix_net
-    depends_on:
-      phoenixdb:
-        condition: service_healthy
-    environment:
-      - PG_HOST=phoenixdb
-      - PG_PORT="5432"
-      - PG_DATABASE=${PG_DATABASE:-postgres}
-      - PG_USER=${PG_USER:-postgres}
-      - PG_PASSWORD=${PG_PASSWORD:-pgdude}
-      - PHOENIXDB_DATABASE=${PHOENIXDB_DATABASE:-phoenixdb}
-      - PHOENIXDB_USER=${PHOENIXDB_USER:-phoenix}
-      - PHOENIXDB_PASSWORD=${PHOENIXDB_PASSWORD:-phoenixdude}
-    cap_drop:
-      - ALL
-    command: |-
-      #!/bin/sh
-      export PG_HOST=phoenix
-      export PG_DATABASE=postgres
-      export PG_USER=postgres
-      export PG_PASSWORD=pgdude
-      psql -c "CREATE USER phoenix WITH PASSWORD 'phoenixdude' ;"
-      psql -c " CREATE DATABASE phoenixdb OWNER phoenix; "      
-    
+      - ./initdb.d:/docker-entrypoint-initdb.d
 
 # psql postgres://user:password@ip_add_or_domain:port/db_name
 
