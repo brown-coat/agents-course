@@ -1,0 +1,76 @@
+networks:
+  phoenix_net:
+
+volumes:
+  pg_data:
+
+services:
+  phoenixdb:
+    container_name: phoenixdb
+    hostname: phoenixdb
+    image: postgres:15-alpine3.21
+    pull_policy: missing  
+    networks:
+      - phoenix_net
+    environment:
+      - POSTGRES_USER=${PG_USER:-postgres}
+      - POSTGRES_PASSWORD=${PG_PASSWORD:-pgdude}
+      - POSTGRES_DB=${PG_DATABASE:-postgres}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5  
+    cap_drop:
+      - ALL  
+    ports:
+      - 5432
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+  initdbphoenix:
+    container_name: initdbphoenix
+    hostname: initdbphoenix
+    image: "alpine/psql:15.5"
+    pull_policy: missing
+    networks:
+      - phoenix_net
+    depends_on:
+      phoenixdb:
+        condition: service_healthy
+    environment:
+      - PG_HOST=phoenixdb
+      - PG_PORT="5432"
+      - PG_DATABASE=${PG_DATABASE:-postgres}
+      - PG_USER=${PG_USER:-postgres}
+      - PG_PASSWORD=${PG_PASSWORD:-pgdude}
+      - PHOENIXDB_DATABASE=${PHOENIXDB_DATABASE:-phoenixdb}
+      - PHOENIXDB_USER=${PHOENIXDB_USER:-phoenix}
+      - PHOENIXDB_PASSWORD=${PHOENIXDB_PASSWORD:-phoenixdude}
+    cap_drop:
+      - ALL
+    command: [
+      "CMD-SHELL",
+      "psql",
+      "-c",
+      "CREATE USER ${PHOENIXDB_USER:-phoenix} PASSWORD '${PHOENIXDB_PASSWORD:-phoenixdude}' ; ",
+      "-c",
+      "CREATE DATABASE ${PHOENIXDB_DATABASE:-phoenixdb} OWNER ${PHOENIXDB_USER:-phoenix} ;"
+      ]
+  phoenix:
+    container_name: phoenix
+    hostname: phoenix
+    image: arizephoenix/phoenix:version-8.26.3 
+    pull_policy: missing
+    networks:
+      - phoenix_net
+    depends_on:  
+      phoenixdb:
+        condition: service_healthy        
+    ports:
+      - 6006:6006  # PHOENIX_PORT
+      - 4317:4317  # PHOENIX_GRPC_PORT
+      # - 9090:9090  # [Optional] PROMETHEUS PORT IF ENABLED
+    environment:    
+      - PHOENIX_SQL_DATABASE_URL=postgresql://${PHOENIXDB_USER:-phoenix}:${PHOENIXDB_PASSWORD:-phoenixdude}@${PG_HOST:-phoenixdb}:${PG_PORT:-5432}/${PHOENIXDB_DATABASE:-phoenixdb}
+    cap_drop:
+      - ALL  
