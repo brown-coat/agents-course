@@ -13,12 +13,12 @@ services:
     networks:
       - phoenix_net
     environment:
-      - POSTGRES_USER=${PG_USER:-postgres}
-      - POSTGRES_PASSWORD=${PG_PASSWORD:-pgdude}
-      - POSTGRES_DB=${PG_DATABASE:-postgres}
-      - PHOENIXDB_DATABASE=${PHOENIXDB_DATABASE:-phoenixdb}
-      - PHOENIXDB_USER=${PHOENIXDB_USER:-phoenix}
-      - PHOENIXDB_PASSWORD=${PHOENIXDB_PASSWORD:-oteldude}
+      - POSTGRES_USER=${POSTGRES_USER_PHOENIX}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_PHOENIX}
+      - POSTGRES_DB=${POSTGRES_DB_PHOENIX}
+      - PHOENIXDB_DATABASE=${PHOENIXDB_DATABASE}
+      - PHOENIXDB_USER=${PHOENIXDB_USER}
+      - PHOENIXDB_PASSWORD=${PHOENIXDB_PASSWORD}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]
       interval: 10s
@@ -53,7 +53,6 @@ services:
       - 4317:4317  # PHOENIX_GRPC_PORT
       # - 9090:9090  # [Optional] PROMETHEUS PORT IF ENABLED
     environment:
-      - PHOENIX_SQL_DATABASE_URL=postgresql://${PHOENIXDB_USER:-phoenix}:${PHOENIXDB_PASSWORD:-oteldude}@${PG_HOST:-phoenixdb}:${PG_PORT:-5432}/${PHOENIXDB_DATABASE:-phoenixdb}
+      - PHOENIX_SQL_DATABASE_URL=postgresql://${PHOENIXDB_USER}:${PHOENIXDB_PASSWORD}@phoenixdb:${PHOENIXDB_PORT:-5432}/${PHOENIXDB_DATABASE}
     cap_drop:
       - ALL
-
