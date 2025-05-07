@@ -153,6 +153,7 @@ python-multipart
 pytz
 PyYAML
 pyzmq
+rank-bm25
 referencing
 regex
 requests
