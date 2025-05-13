@@ -1,0 +1,3 @@
+source ~/.pythonVenvDirs/hfenv/bin/activate
+which python
+python -V

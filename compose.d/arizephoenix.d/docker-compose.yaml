@@ -1,0 +1,58 @@
+networks:
+  phoenix_net:
+
+volumes:
+  pg_data:
+
+services:
+  phoenixdb:
+    container_name: phoenixdb
+    hostname: phoenixdb
+    image: postgres:15-alpine3.21
+    pull_policy: missing  
+    networks:
+      - phoenix_net
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER_PHOENIX}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_PHOENIX}
+      - POSTGRES_DB=${POSTGRES_DB_PHOENIX}
+      - PHOENIXDB_DATABASE=${PHOENIXDB_DATABASE}
+      - PHOENIXDB_USER=${PHOENIXDB_USER}
+      - PHOENIXDB_PASSWORD=${PHOENIXDB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5  
+    cap_drop:
+      - ALL
+    cap_add:
+      - FOWNER
+      - CHOWN
+      - SETGID
+      - SETUID
+      - DAC_READ_SEARCH
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./initdb.d:/docker-entrypoint-initdb.d
+
+  phoenix:
+    container_name: phoenix
+    hostname: phoenix
+    image: arizephoenix/phoenix:version-8.26.3
+    pull_policy: missing
+    networks:
+      - phoenix_net
+    depends_on:
+      phoenixdb:
+        condition: service_healthy
+    ports:
+      - 6006:6006  # PHOENIX_PORT
+      - 4317:4317  # PHOENIX_GRPC_PORT
+      # - 9090:9090  # [Optional] PROMETHEUS PORT IF ENABLED
+    environment:
+      - PHOENIX_SQL_DATABASE_URL=postgresql://${PHOENIXDB_USER}:${PHOENIXDB_PASSWORD}@phoenixdb:${PHOENIXDB_PORT:-5432}/${PHOENIXDB_DATABASE}
+    cap_drop:
+      - ALL
