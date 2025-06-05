@@ -192,7 +192,12 @@ def main():
     args = parse_arguments()
 
     # Initialize the model based on the provided arguments
-    model = load_model(args.model_type, args.model_id)
+    # model = load_model(args.model_type, args.model_id)
+    from smolagents import LiteLLMModel
+    model = LiteLLMModel(
+        model_id="ollama_chat/qwen2.5vl:32b",
+        api_base="http://localhost:11434",
+        )
 
     global driver
     driver = initialize_driver()
