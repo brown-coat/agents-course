@@ -1,7 +1,7 @@
 <CourseFloatingBanner chapter={2}
   classNames="absolute z-10 right-0 top-0"
   notebooks={[
-    {label: "Google Colab", value: "https://colab.research.google.com/github/huggingface/agents-course/blob/main/notebooks/unit2/smolagents/code_agents.ipynb"},
+    {label: "Google Colab", value: "https://colab.research.google.com/#fileId=https://huggingface.co/agents-course/notebooks/blob/main/unit2/smolagents/code_agents.ipynb"},
 ]} />
 
 # 构建使用代码的智能体
@@ -84,14 +84,14 @@ login()
 
 <img src="https://huggingface.co/datasets/agents-course/course-images/resolve/main/en/unit2/smolagents/alfred-playlist.jpg" alt="Alfred 播放列表"/>
 
-对于模型，我们将依赖 `HfApiModel`，它提供对 Hugging Face 的[无服务器推理 API](https://huggingface.co/docs/api-inference/index)的访问。默认模型是 `"Qwen/Qwen2.5-Coder-32B-Instruct"`，它性能良好并可用于快速推理，但你可以从 Hub 中选择任何兼容的模型。
+对于模型，我们将依赖 `InferenceClientModel`，它提供对 Hugging Face 的[无服务器推理 API](https://huggingface.co/docs/api-inference/index)的访问。默认模型是 `"Qwen/Qwen2.5-Coder-32B-Instruct"`，它性能良好并可用于快速推理，但你可以从 Hub 中选择任何兼容的模型。
 
 运行智能体相当简单：
 
 ```python
-from smolagents import CodeAgent, DuckDuckGoSearchTool, HfApiModel
+from smolagents import CodeAgent, DuckDuckGoSearchTool, InferenceClientModel
 
-agent = CodeAgent(tools=[DuckDuckGoSearchTool()], model=HfApiModel())
+agent = CodeAgent(tools=[DuckDuckGoSearchTool()], model=InferenceClientModel())
 
 agent.run("Search for the best music recommendations for a party at the Wayne's mansion.")
 ```
@@ -116,7 +116,7 @@ agent.run("Search for the best music recommendations for a party at the Wayne's 
 如下例所示，我们将使用 `@tool` 装饰器创建一个工具，并将其包含在 `tools` 列表中。
 
 ```python
-from smolagents import CodeAgent, tool, HfApiModel
+from smolagents import CodeAgent, tool, InferenceClientModel
 
 # 根据场合建议菜单的工具
 @tool
@@ -136,7 +136,7 @@ def suggest_menu(occasion: str) -> str:
         return "Custom menu for the butler."
 
 # 管家阿尔弗雷德，为派对准备菜单
-agent = CodeAgent(tools=[suggest_menu], model=HfApiModel())
+agent = CodeAgent(tools=[suggest_menu], model=InferenceClientModel())
 
 # 为派对准备正式菜单
 agent.run("Prepare a formal menu for the party.")
@@ -152,19 +152,20 @@ agent.run("Prepare a formal menu for the party.")
 
 阿尔弗雷德需要计算如果他现在开始准备，什么时候一切都会准备就绪，以防他们需要其他超级英雄的帮助。
 
-`smolagents` 专门用于编写和执行 Python 代码片段的智能体，为安全提供沙盒执行环境。  
+`smolagents` 专门用于编写和执行 Python 代码片段的智能体，处于安全方面的考量，其提供沙盒执行环境。
+
 **代码执行有严格的安全措施** - 默认情况下，预定义安全列表之外的导入被阻止。但是，您可以通过将它们作为字符串传递到 `additional_authorized_imports` 中来授权额外的导入。
 有关安全代码执行的更多详情，请参阅官方[指南](https://huggingface.co/docs/smolagents/tutorials/secure_code_execution)。
 
 创建智能体时，我们将使用 `additional_authorized_imports` 来允许导入 `datetime` 模块。
 
 ```python
-from smolagents import CodeAgent, HfApiModel
+from smolagents import CodeAgent, InferenceClientModel
 import numpy as np
 import time
 import datetime
 
-agent = CodeAgent(tools=[], model=HfApiModel(), additional_authorized_imports=['datetime'])
+agent = CodeAgent(tools=[], model=InferenceClientModel(), additional_authorized_imports=['datetime'])
 
 agent.run(
     """
@@ -218,7 +219,7 @@ alfred_agent.run("Give me the best playlist for a party at Wayne's mansion. The 
 你可能想知道——阿尔弗雷德如何使用 `smolagents` 构建这样一个智能体？通过整合几个工具，他可以生成一个如下的智能体。现在不用担心这些工具，因为我们将在本单元后面有专门的部分详细探讨：
 
 ```python
-from smolagents import CodeAgent, DuckDuckGoSearchTool, FinalAnswerTool, HfApiModel, Tool, tool, VisitWebpageTool
+from smolagents import CodeAgent, DuckDuckGoSearchTool, FinalAnswerTool, InferenceClientModel, Tool, tool, VisitWebpageTool
 
 @tool
 def suggest_menu(occasion: str) -> str:
@@ -290,7 +291,7 @@ agent = CodeAgent(
         catering_service_tool,
         SuperheroPartyThemeTool()
     ], 
-    model=HfApiModel(),
+    model=InferenceClientModel(),
     max_steps=10,
     verbosity_level=2
 )
@@ -355,9 +356,9 @@ SmolagentsInstrumentor().instrument(tracer_provider=trace_provider)
 阿尔弗雷德现在已连接 🔌！来自 `smolagents` 的运行正在 Langfuse 中记录，让他完全可见智能体的行为。有了这个设置，他准备重新访问之前的运行并进一步改进他的派对准备智能体。
 
 ```python
-from smolagents import CodeAgent, HfApiModel
+from smolagents import CodeAgent, InferenceClientModel
 
-agent = CodeAgent(tools=[], model=HfApiModel())
+agent = CodeAgent(tools=[], model=InferenceClientModel())
 alfred_agent = agent.from_hub('sergiopaniego/AlfredAgent', trust_remote_code=True)
 alfred_agent.run("Give me the best playlist for a party at Wayne's mansion. The party idea is a 'villain masquerade' theme")  
 ```
